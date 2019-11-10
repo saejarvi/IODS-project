@@ -1,7 +1,109 @@
-# Insert chapter 2 title here
+# Exercise 2: Analysis
 
 *Describe the work you have done this week and summarize your learning.*
 
-- Describe your work and results clearly. 
+- Describe your work and results clearly.
 - Assume the reader has an introductory course level understanding of writing and reading R code as well as statistical methods.
 - Assume the reader has no previous knowledge of your data or the more advanced methods you are using.
+
+*Insert all the codes, your interpretations and explanations*
+
+# TASK 1
+
+## Reading the data into R and checking the structure and the dimensions of the data
+
+```{r}
+data <- read.table("data/learning2014.txt", sep=" ")
+str(data)
+dim(data)
+```
+
+*The dataset I'm using in these analyses is a subset of the dataset provided by Kimmo Vehkalahti. The original data (N=183) was collected during the course Introduction to Social Sciences at the University of Helsinki in 2014-2015. The study was conducted in Finnish. Using the ASSIST (Approaches and Study Skills Inventory) questionnaire, the participating students were asked about e.g. their learning approaches (deep, strategic, and surface approach). Their global attitude towards statistics was measured using the SATS (Survey of Attitudes Toward Statistics) questionnaire. Each student's age and gender were included, as was their learning achievement measured by points they got in the course exam.*
+
+*For the current analyses, I removed the students who got 0 points in the exam. Thus, the dataset has 166 observations and the 7 variables (Age, Points, gender, attitude, deep, stra, surf) described above.*
+
+
+# TASK 2
+
+## Graphical overview of the data and a summary of data
+
+I installed the packages ggplot2, GGally and psych.
+
+```{r}
+library("ggplot2")
+library("GGally")
+library("psych")
+```
+
+###Advanced plot matrix and descriptive statistics:
+
+```{r}
+matrix <- ggpairs(data, mapping = aes(col = gender, alpha = 0.3), lower = list(combo = wrap("facethist", bins = 20)))
+matrix
+
+summary(data) #all participants
+
+describeBy(data, group="gender") #using the psych library to get a summary of the data divided by gender
+```
+
+
+*The majority of the students were female (female n=110, male n=56). Based on the plots, the distributions of age, exam points and deep learning seem very similar in both genders; the majority were young adults (75% were under 27 years old, range 17-55 years), half of the participants got at least 23.0 points from the exam (range 7-33 points), and deep learning strategy was favored (50% scored 3.667 or higher, range 1.583-4.917).*
+
+*As for the between-gender differences, attitude towards statistics seems more positive among male participants (F median = 2.95, M median = 3.40). Female students seem to lean just a bit more towards using strategic learning (F median = 3.25, M median = 3.00), but also towards using surface learning (F median = 2.83, M median = 2.62).*
+
+*Some of the continuous variables seem to correlate with one another: exam points correlate positively with attitude towards statistics (r=0.437) and using strategic learning (r=0.146); and negatively with using surface learning (r=-0.144). Those resorting to surface learning tended to rely less on deep learning (r=-0.324). Interestingly, this kind of relationship was only seen in males (r=-0.622 vs. females r=0.087).*
+
+
+# TASKS 3 & 4
+
+## Regression model summary
+
+Based on the correlations between the continuous variables, I chose attitude towards statistics, using strategic learning and surface learning as explanatory variables. Exam points was used as the dependent variable.
+
+```{r}
+#The regression model:
+regr_model <- lm(Points ~ attitude + stra + surf, data = data)
+summary(regr_model)
+```
+
+*According to the model, +1 points in the exam corresponds to a) +3.4 points in the attitude towards statistics, b) +0.9 points in strategic learning approach, and c) -0.6 points in surface learning approach.*
+
+*The model is statistically significant (p<0.001, F=14.13, df=162). However, of the three explanatory variables, the attitude variable is the only one with statistical significance (p<0.001). This model covers ~20% of the variance in the exam points, so ~80% of the variance is left "unexplained".*
+
+```{r}
+#A new model without surface learning:
+regr_model2 <- lm(Points ~ attitude + stra, data = data)
+summary(regr_model2)
+```
+
+*In this model, attitude is strongly significant (p<0.001) and strategic learning non-significant at 0.05 level (p<0.1). Also this model covers ~20% of the variance in the exam points.*
+
+```{r}
+#The final model with only one explanatory variable:
+regr_model3 <- lm(Points ~ attitude, data = data)
+summary(regr_model3)
+```
+
+*In this model, +3.5 points in the attitude towards statistics corresponds to +1 points in the exam. With only one explanatory variable, we get a model  covering almost 20% of the variance in the exam points. The model is statistically significant (p<0.001, F=38.61, df=164).*
+
+*Conclusion: attitude counts!*
+
+
+# TASK 5
+
+## Diagnostic plots
+
+```{r}
+plot(regr_model3)
+```
+
+Residuals vs. fitted values:
+*The residuals seem randomly distributed, so there is no dependency between residuals and the predicted values.*
+
+Normal QQ-plot:
+*The standardized residuals deviate a bit from the plotline, but overall, the residuals are rather normally distributed. Our assumption that exam points are normally distributed seems to hold well.*
+
+Residuals vs. Leverage:
+*All subjects are within Cook's distance, i.e. there seem to be no cases having an especially strong influence on the regression analysis.*
+
+*These plots speak for the robustness of our regression model, i.e. the assumptions of using the model are not violated.*
