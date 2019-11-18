@@ -201,9 +201,17 @@ summary {
 <li><a href="#task-5">TASK 5</a><ul>
 <li><a href="#diagnostic-plots">Diagnostic plots</a></li>
 </ul></li>
-<li><a href="#exercise-3-analysis">Exercise 3: Analysis</a><ul>
+<li><a href="#exercise-3-analysis">Exercise 3: Analysis</a></li>
+<li><a href="#task-2-1">TASK 2</a><ul>
 <li><a href="#reading-the-data-into-r-using-the-link-provided">Reading the data into R using the link provided:</a></li>
+</ul></li>
+<li><a href="#task-3">TASK 3</a><ul>
 <li><a href="#relationship-of-alcohol-consumption-with-sex-family-relationships-going-out-with-friends-and-health-status">Relationship of alcohol consumption with sex, family relationships, going out with friends and health status</a></li>
+</ul></li>
+<li><a href="#task-4">TASK 4</a></li>
+<li><a href="#task-5-1">TASK 5</a><ul>
+<li><a href="#logistic-regression-models">Logistic regression models</a></li>
+<li><a href="#the-model-with-only-statistically-significant-predictors-included">The model with only statistically significant predictors included:</a></li>
 </ul></li>
 </ul>
 </div>
@@ -431,8 +439,9 @@ summary(regr_model3)</code></pre>
 </div>
 <div id="exercise-3-analysis" class="section level1">
 <h1>Exercise 3: Analysis</h1>
-<p><em>Write a continuous report with a clear structure. There is no need to repeat the assignments in your course diary. The focus of your work should be on the clarity of your report and for full points you should be able to show an understanding of the methods and results used in your analysis. Feel free to also use material outside this course as learning sources. Clear, understandable and comprehensive explanations are worth the full points.</em></p>
-<p><em>Insert all the codes, your interpretations and explanations</em></p>
+</div>
+<div id="task-2-1" class="section level1">
+<h1>TASK 2</h1>
 <div id="reading-the-data-into-r-using-the-link-provided" class="section level2">
 <h2>Reading the data into R using the link provided:</h2>
 <pre class="r"><code>alc_data &lt;- read.table(&quot;http://s3.amazonaws.com/assets.datacamp.com/production/course_2218/datasets/alc.txt&quot;, header=TRUE, sep=&quot;,&quot;)
@@ -474,11 +483,200 @@ str(alc_data)</code></pre>
 ##  $ alc_use   : num  1 1 2.5 1 1.5 1.5 1 1 1 1 ...
 ##  $ high_use  : logi  FALSE FALSE TRUE FALSE FALSE FALSE ...</code></pre>
 <p><em>The dataset has been downloaded from UCI Machine Learning Depository. The data have been collected from secondary education students in two Portuguese schools by using school reports and questionnaires. The data contain 35 variables that cover the students’ grades, democraphic, social and school-related measures.</em></p>
-<p><em>The aim of the current analyses is to study the relationships between high/low alcohol consumption (high_use) and some of the other variables in the data.</em></p>
 </div>
+</div>
+<div id="task-3" class="section level1">
+<h1>TASK 3</h1>
+<p><em>The aim of the current analyses is to study the relationships between high/non-high alcohol consumption (high_use) and some of the other variables in the data.</em></p>
 <div id="relationship-of-alcohol-consumption-with-sex-family-relationships-going-out-with-friends-and-health-status" class="section level2">
 <h2>Relationship of alcohol consumption with sex, family relationships, going out with friends and health status</h2>
-<p><em>I chose the following 4 variables of interest for the analyses:</em> <em>sex - student’s sex (binary: ‘F’ - female or ‘M’ - male) </em>famrel - quality of family relationships (numeric: from 1 - very bad to 5 - excellent) <em>goout - going out with friends (numeric: from 1 - very low to 5 - very high) </em>health - current health status (numeric: from 1 - very bad to 5 - very good)</p>
+<p><em>I chose the following 4 variables of interest for the analysis:</em> freetime - free time after school (numeric: from 1 - very low to 5 - very high) famrel - quality of family relationships (numeric: from 1 - very bad to 5 - excellent); goout - going out with friends (numeric: from 1 - very low to 5 - very high); health - current health status (numeric: from 1 - very bad to 5 - very good).</p>
+<p><em>My hypotheses are:</em> 1) high alcohol consumption is more probable in cases of having more freetime 2) high alcohol consumption is more probable in cases of bad family relationships vs. good relationships 3) high alcohol consumption is more probable in students who tend to go out with friends 4) high alcohol consumption is more probable in cases of worse current health status</p>
+</div>
+</div>
+<div id="task-4" class="section level1">
+<h1>TASK 4</h1>
+<p>First checking how many a student uses non-high vs. high amounts of alcohol:</p>
+<pre class="r"><code>library(dplyr); library(ggplot2); library(psych)</code></pre>
+<pre><code>## Warning: package 'dplyr' was built under R version 3.4.4</code></pre>
+<pre><code>## 
+## Attaching package: 'dplyr'</code></pre>
+<pre><code>## The following object is masked from 'package:GGally':
+## 
+##     nasa</code></pre>
+<pre><code>## The following objects are masked from 'package:stats':
+## 
+##     filter, lag</code></pre>
+<pre><code>## The following objects are masked from 'package:base':
+## 
+##     intersect, setdiff, setequal, union</code></pre>
+<pre class="r"><code>alc_data %&gt;% group_by(high_use) %&gt;% summarise(count = n())</code></pre>
+<pre><code>## # A tibble: 2 x 2
+##   high_use count
+##   &lt;lgl&gt;    &lt;int&gt;
+## 1 FALSE      270
+## 2 TRUE       112</code></pre>
+<p>In this dataset, n=270 students have non-high, n=112 have high alcohol consumption.</p>
+<p>Group frequencies of the 4 chosen variables:</p>
+<pre class="r"><code>table(alc_data$freetime)</code></pre>
+<pre><code>## 
+##   1   2   3   4   5 
+##  18  62 156 109  37</code></pre>
+<pre class="r"><code>table(alc_data$famrel)</code></pre>
+<pre><code>## 
+##   1   2   3   4   5 
+##   9  18  66 183 106</code></pre>
+<pre class="r"><code>table(alc_data$goout)</code></pre>
+<pre><code>## 
+##   1   2   3   4   5 
+##  24  99 123  82  54</code></pre>
+<pre class="r"><code>table(alc_data$health)</code></pre>
+<pre><code>## 
+##   1   2   3   4   5 
+##  46  43  83  64 146</code></pre>
+<p>How the use of alcohol is divided among the groups of the 4 variables of interest:</p>
+<pre class="r"><code>cross1 &lt;- table(alc_data$high_use, alc_data$freetime)
+round(prop.table(cross1,2)*100, digits=0) #percentages in each group</code></pre>
+<pre><code>##        
+##          1  2  3  4  5
+##   FALSE 89 76 74 63 59
+##   TRUE  11 24 26 37 41</code></pre>
+<pre class="r"><code>cross2 &lt;- table(alc_data$high_use, alc_data$famrel)
+round(prop.table(cross2,2)*100, digits=0)</code></pre>
+<pre><code>##        
+##          1  2  3  4  5
+##   FALSE 78 50 61 72 78
+##   TRUE  22 50 39 28 22</code></pre>
+<pre class="r"><code>cross3 &lt;- table(alc_data$high_use, alc_data$goout)
+round(prop.table(cross3,2)*100, digits=0)</code></pre>
+<pre><code>##        
+##          1  2  3  4  5
+##   FALSE 88 85 81 52 41
+##   TRUE  12 15 19 48 59</code></pre>
+<pre class="r"><code>cross4 &lt;- table(alc_data$high_use, alc_data$health)
+round(prop.table(cross4,2)*100, digits=0)</code></pre>
+<pre><code>##        
+##          1  2  3  4  5
+##   FALSE 76 67 76 73 66
+##   TRUE  24 33 24 27 34</code></pre>
+<p>Based on these contingency tables, it seems that a) as freetime increases (1-&gt;5), the probability of high alcohol consumption increases; b) as the quality of family relationships increases (1-&gt;5), the probability of high alcohol consumption first increases, then decreases; c) as going out with friends increases (1-&gt;5), the probability of high alcohol consumption increases; and d) as current health status increases (1-&gt;5), the probability of high alcohol consumption doesn’t change.</p>
+<p><em>My hypotheses were:</em> 1) high alcohol consumption is more probable in cases of having more freetime 2) high alcohol consumption is more probable in cases of bad family relationships vs. good relationships 3) high alcohol consumption is more probable in students who tend to go out with friends 4) high alcohol consumption is more probable in cases of worse current health status</p>
+<p>This preliminary exploration seems to support my hypotheses 1) and 3), but not 2) and 4).</p>
+<p>It is worth noting that the percentages can be misleading with very small number of cases (e.g. famrel=1, n=9).</p>
+</div>
+<div id="task-5-1" class="section level1">
+<h1>TASK 5</h1>
+<div id="logistic-regression-models" class="section level2">
+<h2>Logistic regression models</h2>
+<p>Using glm() to fit a logistic regression model; computing odds ratios (OR) and 95% confidence intervals (CI) of the four variables of interest:</p>
+<pre class="r"><code>m_1 &lt;- glm(high_use ~ freetime + famrel + goout + health, data = alc_data)
+OR_1 &lt;- coef(m_1) %&gt;% exp 
+CI_1 &lt;- confint(m_1) %&gt;% exp</code></pre>
+<pre><code>## Waiting for profiling to be done...</code></pre>
+<pre class="r"><code>summary(m_1)</code></pre>
+<pre><code>## 
+## Call:
+## glm(formula = high_use ~ freetime + famrel + goout + health, 
+##     data = alc_data)
+## 
+## Deviance Residuals: 
+##     Min       1Q   Median       3Q      Max  
+## -0.6235  -0.3021  -0.1617   0.4023   1.0652  
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept) -0.01266    0.12451  -0.102 0.919077    
+## freetime     0.03297    0.02306   1.430 0.153551    
+## famrel      -0.08620    0.02374  -3.631 0.000321 ***
+## goout        0.14025    0.01991   7.044 8.89e-12 ***
+## health       0.02869    0.01547   1.855 0.064393 .  
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## (Dispersion parameter for gaussian family taken to be 0.1760194)
+## 
+##     Null deviance: 79.162  on 381  degrees of freedom
+## Residual deviance: 66.359  on 377  degrees of freedom
+## AIC: 427.44
+## 
+## Number of Fisher Scoring iterations: 2</code></pre>
+<pre class="r"><code>cbind(OR_1, CI_1)</code></pre>
+<pre><code>##                  OR_1     2.5 %    97.5 %
+## (Intercept) 0.9874219 0.7736114 1.2603254
+## freetime    1.0335187 0.9878552 1.0812930
+## famrel      0.9174147 0.8757075 0.9611084
+## goout       1.1505612 1.1065292 1.1963453
+## health      1.0291043 0.9983761 1.0607783</code></pre>
+<p>Odds ratio refers to the ratio of two odds (in this case, the odds of having high/non-high alcohol consumption). OR = 1 means these two conditions are just as likely. The confidence interval shows the range the OR falls into with 95% probability (default).</p>
+<p>According to this model, having a) more or less freetime or b) better or worse current health status makes no difference in terms of alcohol consumption (CI includes one).</p>
+<p>On the other hand, both the quality of family relationships and the frequency of going out with friends seem to be valid predictors of the probability of high alcohol consumption (p&lt;0.001 for both). Here, the first level of the outcome variable (FALSE) denotes failure and the other (TRUE) success. Because higher odds = higher probability of “success” and lower odds = lower probability of “success” vs. “failure”, it seems that better quality of family relationships is associated with slightly lower probability of high alcohol consumption. Conversely, more frequent going out with friends is associated with slightly higher probability of high alcohol consumption. These results support my hypotheses 2) and 3), but not 1) and 4).</p>
+</div>
+<div id="the-model-with-only-statistically-significant-predictors-included" class="section level2">
+<h2>The model with only statistically significant predictors included:</h2>
+<pre class="r"><code>m_2 &lt;- glm(high_use ~ famrel + goout, data = alc_data, family = &quot;binomial&quot;)
+
+#Analyzing the predictive power of the model:
+prob &lt;- predict(m_2, type = &quot;response&quot;) #Creating object prob that indicates the predicted probabilities on the scale of the response var (high_use)
+alc_data &lt;- mutate(alc_data, probability = prob)  #Adding a new variable called probability to the dataset
+alc_data &lt;- mutate(alc_data, prediction = probability &gt; 0.5) #Adding a new variable called prediction; TRUE if probability &gt; 0.5
+
+str(alc_data) #Checking how the dataset looks</code></pre>
+<pre><code>## 'data.frame':    382 obs. of  37 variables:
+##  $ school     : Factor w/ 2 levels &quot;GP&quot;,&quot;MS&quot;: 1 1 1 1 1 1 1 1 1 1 ...
+##  $ sex        : Factor w/ 2 levels &quot;F&quot;,&quot;M&quot;: 1 1 1 1 1 2 2 1 2 2 ...
+##  $ age        : int  18 17 15 15 16 16 16 17 15 15 ...
+##  $ address    : Factor w/ 2 levels &quot;R&quot;,&quot;U&quot;: 2 2 2 2 2 2 2 2 2 2 ...
+##  $ famsize    : Factor w/ 2 levels &quot;GT3&quot;,&quot;LE3&quot;: 1 1 2 1 1 2 2 1 2 1 ...
+##  $ Pstatus    : Factor w/ 2 levels &quot;A&quot;,&quot;T&quot;: 1 2 2 2 2 2 2 1 1 2 ...
+##  $ Medu       : int  4 1 1 4 3 4 2 4 3 3 ...
+##  $ Fedu       : int  4 1 1 2 3 3 2 4 2 4 ...
+##  $ Mjob       : Factor w/ 5 levels &quot;at_home&quot;,&quot;health&quot;,..: 1 1 1 2 3 4 3 3 4 3 ...
+##  $ Fjob       : Factor w/ 5 levels &quot;at_home&quot;,&quot;health&quot;,..: 5 3 3 4 3 3 3 5 3 3 ...
+##  $ reason     : Factor w/ 4 levels &quot;course&quot;,&quot;home&quot;,..: 1 1 3 2 2 4 2 2 2 2 ...
+##  $ nursery    : Factor w/ 2 levels &quot;no&quot;,&quot;yes&quot;: 2 1 2 2 2 2 2 2 2 2 ...
+##  $ internet   : Factor w/ 2 levels &quot;no&quot;,&quot;yes&quot;: 1 2 2 2 1 2 2 1 2 2 ...
+##  $ guardian   : Factor w/ 3 levels &quot;father&quot;,&quot;mother&quot;,..: 2 1 2 2 1 2 2 2 2 2 ...
+##  $ traveltime : int  2 1 1 1 1 1 1 2 1 1 ...
+##  $ studytime  : int  2 2 2 3 2 2 2 2 2 2 ...
+##  $ failures   : int  0 0 3 0 0 0 0 0 0 0 ...
+##  $ schoolsup  : Factor w/ 2 levels &quot;no&quot;,&quot;yes&quot;: 2 1 2 1 1 1 1 2 1 1 ...
+##  $ famsup     : Factor w/ 2 levels &quot;no&quot;,&quot;yes&quot;: 1 2 1 2 2 2 1 2 2 2 ...
+##  $ paid       : Factor w/ 2 levels &quot;no&quot;,&quot;yes&quot;: 1 1 2 2 2 2 1 1 2 2 ...
+##  $ activities : Factor w/ 2 levels &quot;no&quot;,&quot;yes&quot;: 1 1 1 2 1 2 1 1 1 2 ...
+##  $ higher     : Factor w/ 2 levels &quot;no&quot;,&quot;yes&quot;: 2 2 2 2 2 2 2 2 2 2 ...
+##  $ romantic   : Factor w/ 2 levels &quot;no&quot;,&quot;yes&quot;: 1 1 1 2 1 1 1 1 1 1 ...
+##  $ famrel     : int  4 5 4 3 4 5 4 4 4 5 ...
+##  $ freetime   : int  3 3 3 2 3 4 4 1 2 5 ...
+##  $ goout      : int  4 3 2 2 2 2 4 4 2 1 ...
+##  $ Dalc       : int  1 1 2 1 1 1 1 1 1 1 ...
+##  $ Walc       : int  1 1 3 1 2 2 1 1 1 1 ...
+##  $ health     : int  3 3 3 5 5 5 3 1 1 5 ...
+##  $ absences   : int  6 4 10 2 4 10 0 6 0 0 ...
+##  $ G1         : int  5 5 7 15 6 15 12 6 16 14 ...
+##  $ G2         : int  6 5 8 14 10 15 12 5 18 15 ...
+##  $ G3         : int  6 6 10 15 10 15 11 6 19 15 ...
+##  $ alc_use    : num  1 1 2.5 1 1.5 1.5 1 1 1 1 ...
+##  $ high_use   : logi  FALSE FALSE TRUE FALSE FALSE FALSE ...
+##  $ probability: num  0.411 0.171 0.123 0.177 0.123 ...
+##  $ prediction : logi  FALSE FALSE FALSE FALSE FALSE FALSE ...</code></pre>
+<pre class="r"><code>#Predictions vs. actual values of alcohol consumption:
+table(high_use = alc_data$high_use, prediction = alc_data$prediction)</code></pre>
+<pre><code>##         prediction
+## high_use FALSE TRUE
+##    FALSE   243   27
+##    TRUE     64   48</code></pre>
+<p>Total proportions of inaccurately classified individuals:</p>
+<pre class="r"><code>proportion_inacc &lt;- (64 + 27) / 382
+proportion_inacc</code></pre>
+<pre><code>## [1] 0.2382199</code></pre>
+<p>Based on the results, the model makes an inaccurate prediction in 23.8% of the cases.</p>
+<pre class="r"><code>proportion_acc_false &lt;- 243 / (243 + 64)
+proportion_acc_false</code></pre>
+<pre><code>## [1] 0.7915309</code></pre>
+<pre class="r"><code>proportion_acc_true &lt;- 48 / (48 + 27)
+proportion_acc_true</code></pre>
+<pre><code>## [1] 0.64</code></pre>
+<p>The model predicts FALSE cases (low alcohol consumption) at 79.2% accuracy and TRUE cases (high alcohol consumption) at 64% accuracy. Therefore, the model is a more accurate predictor than, say, tossing a coin. However, this is surely not the best possible model to predict the probability of high alcohol use in this population.</p>
 </div>
 </div>
 
