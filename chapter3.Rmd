@@ -43,26 +43,26 @@ In this dataset, n=270 students have non-high, n=112 have high alcohol consumpti
 Group frequencies of the 4 chosen variables:
 
 ```{r}
-table(freetime)
-table(famrel)
-table(goout)
-table(health)
+table(alc_data$freetime)
+table(alc_data$famrel)
+table(alc_data$goout)
+table(alc_data$health)
 ```
 
 
 How the use of alcohol is divided among the groups of the 4 variables of interest:
 
 ```{r}
-cross1 <- table(high_use, freetime)
+cross1 <- table(alc_data$high_use, alc_data$freetime)
 round(prop.table(cross1,2)*100, digits=0) #percentages in each group
 
-cross2 <- table(high_use, famrel)
+cross2 <- table(alc_data$high_use, alc_data$famrel)
 round(prop.table(cross2,2)*100, digits=0)
 
-cross3 <- table(high_use, goout)
+cross3 <- table(alc_data$high_use, alc_data$goout)
 round(prop.table(cross3,2)*100, digits=0)
 
-cross4 <- table(high_use, health)
+cross4 <- table(alc_data$high_use, alc_data$health)
 round(prop.table(cross4,2)*100, digits=0)
 ```
 
