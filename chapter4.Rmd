@@ -1,0 +1,202 @@
+# Exercise 4: Analysis
+
+*In this week's exercise, we use the linear discriminant analysis to predict an outcome (crime rate category) based on several predictor variables. We test the predictive power of the model with a test set (subset of the original data). This analysis helps in determining which variables discriminate the outcome categories best. Finally we use the clustering approach to try and determine the "best" number of clusters in the dataset.*
+
+##TASK 2
+## Loading the Boston data from the MASS package and checking the structure and the dimensions of the data
+
+```{r}
+library(MASS) #accessing the MASS package
+data("Boston") #loading the data
+str(Boston) #structure
+dim(Boston) #dimensions
+```
+
+*The data frame has 506 observations and 14 variables. The data have been collected in suburbs in Boston, and they include different housing values related variables, such as per capita crime rate, average number of rooms per dwelling etc., for each suburb studied. The variable descriptions can be found here: https://stat.ethz.ch/R-manual/R-devel/library/MASS/html/Boston.html.*
+
+
+##TASK 3
+## Graphical overview of the data, summaries of the variables
+
+```{r}
+library("GGally") #access to the GGally library and the ggpairs() function
+
+#Histograms of the continuous variables:
+hist(Boston$crim,main="Per capita crime rate by town")
+hist(Boston$zn,main="Proportion of residential land zoned for lots over 25,000 sq.ft.")
+hist(Boston$indus,main="Proportion of non-retail business acres per town")
+hist(Boston$nox,main="Nitrogen oxides concentration (parts per 10 million)")
+hist(Boston$rm,main="Average number of rooms per dwelling")
+hist(Boston$age,main="Proportion of owner-occupied units built prior to 1940")
+hist(Boston$dis,main="Weighted mean of distances to five Boston employment centres")
+hist(Boston$rad,main="Index of accessibility to radial highways")
+hist(Boston$tax,main="Full-value property-tax rate per $10,000")
+hist(Boston$ptratio,main="Pupil-teacher ratio by town")
+hist(Boston$black,main="1000(Bk - 0.63)^2 where Bk is the proportion of blacks by town")
+hist(Boston$lstat,main="Lower status of the population (percent)")
+hist(Boston$medv,main="Median value of owner-occupied homes in $1000s")
+
+#Summaries of the variables:
+summary(Boston)
+
+#Correlations between the variables:
+matrix <- ggpairs(Boston, mapping = aes(alpha = 0.3), lower = list(combo = wrap("facethist", bins = 20)))
+matrix
+
+```
+
+```{r}
+#Inspecting more closely the relationships between specific promising variables (vars showing good correlation with other vars):
+promise <- c(Boston$zn, Boston$indus, Boston$nox, Boston$rm, Boston$ptratio, Boston$lstat)
+matrix2 <- ggpairs(Boston, columns=2:11, mapping = aes(alpha = 0.3), lower = list(combo = wrap("facethist", bins = 20)))
+matrix2
+```
+
+
+Overall, we can see that many variables in this dataset are skewed in distribution. The outputs show us e.g. that in most areas, per capita crime rate is very low (Md=0.26, range 0.01-88.98), as is the proportion of residential land zoned for lots over 25,000 square feet (Md=0.00, range0.00-100.00) (i.e. in almost all areas, families tend to live within smaller lots than around 2,300 square meters). Many areas have around 20% proportion of non-retail business acres (range 0.46-27.74%). In half of the areas studied, nitrogen oxides concentration is lower than 0.54 parts per 10 million (range 0.39-0.87). I most areas, the average number of rooms per dwelling is around six (range 3.56-8.78). The most common pupil-teacher ratio is around 20 (20 pupils per teacher), ranging from 12.60 to 22.00. 
+
+According to the latter matrix, the most prominent correlations appear between nitrogen oxides concentration and some other variables: dis (the larger the distance to employment centers, the smaller the nitrogen oxides concentration in the air, r=-0.769), indus (the greater the proportion of non-retail industry acres, the greater the nitrogen oxides concentration in the air, r=0.764), and age (the greater the proportion of owner-occupied units built prior to 1940, the greater the nitrogen oxides concentration in the air, r=0.731).
+
+Strong correlations can also be seen between the variables indus and tax (the greater the proportion of non-retail industry acres, the greater the full-value property-tax rate, r=0.721) and indus and dis (the greater the proportion of non-retail industry acres, the smaller the distances to employment centers, r=-0.708).
+
+In short, the air quality seems to be worst nearest to the employment centers, old buildings and non-retail industry; and non-retail industry tend to be located near the employment centers and have higher property taxes.
+
+
+##TASK 4
+##Standardizing the dataset, creating a new categorical var and dividing the dataset
+
+In order to conduct the linear discriminant analysis, we need to scale the data first. This is because of the underlying assumptions that each variable has the same variance and that variables are normally distributed. We also need to have a categorical variable as the outcome variable, so we need to categorize the continuous variable "crim".
+
+```{r}
+#Positioning each variable so on the x axis that the mean is 0 -> saving to an object:
+Boston_scaled <- scale(Boston)
+
+#Summaries of the scaled vars:
+summary(Boston_scaled)
+
+#Changing the object to a data frame:
+Boston_scaled <- as.data.frame(Boston_scaled)
+
+```
+
+We can see that while the mean of every variable is 0.00, distribution of many variables still varies from normal - this may be problematic for the assumptions of the linear discriminant analysis.
+
+
+```{r}
+#Creating a categorical variable of the crime rate using the quantiles as the break points:
+quantile_vector <- quantile(Boston_scaled$crim) #creating a vector for the quantiles
+quantile_vector #checking the break points
+crime_categ <- cut(Boston_scaled$crim, breaks = quantile_vector, include.lowest = TRUE) #Creating the new var with 4 levels
+
+#Dropping the old continuous crime rate var ("crim") from the dataset and adding the new categorical one ("crime_categ"):
+Boston_scaled <- dplyr::select(Boston_scaled, -crim)
+Boston_scaled <- data.frame(Boston_scaled, crime_categ)
+summary(Boston_scaled)
+```
+
+
+Now we can see that the new crime_categ variable has four levels, and each level has 126 or 127 cases.
+
+We are about to create a model and train it using one subset of the data (80%) and to test the predictive power of the model using another subset (20%). Therefore, the dataset needs to be split in two.
+
+
+```{r}
+row_n <- nrow(Boston_scaled)  #saving the number of rows
+chosen_rows <- sample(row_n, size = row_n * 0.8) #Choosing randomly 80% of the rows
+
+#Dividing the data set to train and test sets:
+train <- Boston_scaled[chosen_rows,]
+test <- Boston_scaled[-chosen_rows,]
+```
+
+
+##TASK 5
+## Fitting the linear discriminant analysis (LDA) on the train set and drawing the LDA biplot
+
+We use the categorical crime rate variable as the target variable and all the other vars as predictor variables.
+
+```{r}
+library(dplyr)
+
+lda.fit <- lda(crime_categ ~ ., data = train) #Using the train set for the analysis
+lda.fit
+
+```
+
+The output shows that each outcome class has 23.8-26.7% of the observations. In case of several of the predictive variables, the means between the crime categories seem to differ: for example, in areas belonging to the highest crime rate category, the non-retail business takes most land acres, the air is most polluted and the pupil-teacher ratio is the highest. Many - but not all - variables change in rather linear fashion across the crime rate categories.
+
+The linear discriminant 1 explains 94.6% of the between-group variance.
+
+
+```{r}
+#The function for lda biplot arrows:
+lda.arrows <- function(x, myscale = 1, arrow_heads = 0.1, color = "red", tex = 0.75, choices = c(1,2)){
+  heads <- coef(x)
+  arrows(x0 = 0, y0 = 0, 
+         x1 = myscale * heads[,choices[1]], 
+         y1 = myscale * heads[,choices[2]], col=color, length = arrow_heads)
+  text(myscale * heads[,choices], labels = row.names(heads), 
+       cex = tex, col=color, pos=3)
+}
+
+classes <- as.numeric(train$crime_categ)  #targeting classes as numeric
+
+plot(lda.fit, dimen = 2, col = classes, pch = classes)
+lda.arrows(lda.fit, myscale =1)
+           
+```
+
+It seems that the category with highest crime rate (blue) is clearly separate from the other three categories. The categories with lowest (black) and second highest crime rate (green) are also rather well distinguishable.
+
+
+##TASK 6
+##Saving + removing the crime categories from the test set and predicting the outcomes in the test data
+
+```{r}
+#Saving the crime categories from the test subset as correct classes and then removing these categories from the test data:
+correct_categ <- test$crime_categ
+correct_categ #checking the saved categories
+test <- dplyr::select(test, -crime_categ)
+
+#Predicting the classes (crime categories) using the LDA model:
+lda.pred <- predict(lda.fit, newdata = test)  #saving the predictions into a new object
+
+table(correct = correct_categ, predicted = lda.pred$class)
+
+```
+
+The table shows that the model predicted the class correctly at the accuracy of 70.6% (lowest crime rate), 28.6% (second lowest), 73.9% (second highest)and 96.3% (highest). These numbers are in line with the lda biplot showed earlier.
+
+
+##TASK 7
+##Using the clustering approach to the observations in the Boston dataset
+
+```{r}
+#Reloading and standardizing the Boston dataset
+data("Boston") #loading the data, MASS package available
+
+#Positioning each variable so on the x axis that the mean is 0 -> saving to an object:
+Boston_scaled2 <- scale(Boston)
+
+#Summaries of the scaled vars:
+summary(Boston_scaled2)
+
+#Changing the object to a data frame:
+Boston_scaled2 <- as.data.frame(Boston_scaled2)
+
+#Calculating the distances (similarity/dissimilarity) between observations)
+dist_eu <- dist(Boston_scaled2)  #euclidean distance matrix calculates the usual distance between two vectors
+dist_man <- dist(Boston_scaled2, method = "manhattan")  #manhattan distance matrix calculates the absolute distance between two vectors
+
+summary(dist_man)
+
+#Running k-means algorithm as a clustering method
+
+km <-kmeans(Boston_scaled2, centers = 3) #k-means clustering
+
+pairs(Boston_scaled2[1:5], col = km$cluster) #plotting the Boston dataset with clusters
+pairs(Boston_scaled2[6:10], col = km$cluster)
+pairs(Boston_scaled2[11:14], col = km$cluster)
+```
+
+The k-means clustering method assigns observations to clusters based on similarity of the objects. I ran the analysis with 3, 4, and 5 centers. Judged by the visualizations, the three-center solution seems to produce the most differing categories, and therefore I would try clustering the data into 3 groups. Based solely on the visualizations, among the most promising-looking variables for maximizing the distance between clusters are per capita crime rate (crim), proportion of non-retail business acres in town (indus), air pollution (nox), proportion of owner-occupied old units (age) and distances to employment centers (dis). These results are rather well in line with the initial correlation results shown below Task 3.

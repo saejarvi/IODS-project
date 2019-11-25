@@ -8,7 +8,7 @@
 
 *Insert all the codes, your interpretations and explanations*
 
-# TASK 1
+## TASK 1
 
 ## Reading the data into R and checking the structure and the dimensions of the data
 
@@ -23,7 +23,7 @@ dim(data)
 *For the current analyses, I removed the students who got 0 points in the exam. Thus, the dataset has 166 observations and the 7 variables (Age, Points, gender, attitude, deep, stra, surf) described above.*
 
 
-# TASK 2
+## TASK 2
 
 ## Graphical overview of the data and a summary of data
 
@@ -54,7 +54,7 @@ describeBy(data, group="gender") #using the psych library to get a summary of th
 *Some of the continuous variables seem to correlate with one another: exam points correlate positively with attitude towards statistics (r=0.437) and using strategic learning (r=0.146); and negatively with using surface learning (r=-0.144). Those resorting to surface learning tended to rely less on deep learning (r=-0.324). Interestingly, this kind of relationship was only seen in males (r=-0.622 vs. females r=0.087).*
 
 
-# TASKS 3 & 4
+## TASKS 3 & 4
 
 ## Regression model summary
 
@@ -89,7 +89,7 @@ summary(regr_model3)
 *Conclusion: attitude counts!*
 
 
-# TASK 5
+## TASK 5
 
 ## Diagnostic plots
 

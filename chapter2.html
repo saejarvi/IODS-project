@@ -189,9 +189,9 @@ summary {
 <li>Assume the reader has no previous knowledge of your data or the more advanced methods you are using.</li>
 </ul>
 <p><em>Insert all the codes, your interpretations and explanations</em></p>
+<div id="task-1" class="section level2">
+<h2>TASK 1</h2>
 </div>
-<div id="task-1" class="section level1">
-<h1>TASK 1</h1>
 <div id="reading-the-data-into-r-and-checking-the-structure-and-the-dimensions-of-the-data" class="section level2">
 <h2>Reading the data into R and checking the structure and the dimensions of the data</h2>
 <pre class="r"><code>data &lt;- read.table(&quot;data/learning2014.txt&quot;, sep=&quot; &quot;)
@@ -209,9 +209,9 @@ str(data)</code></pre>
 <p><em>The dataset I’m using in these analyses is a subset of the dataset provided by Kimmo Vehkalahti. The original data (N=183) was collected during the course Introduction to Social Sciences at the University of Helsinki in 2014-2015. The study was conducted in Finnish. Using the ASSIST (Approaches and Study Skills Inventory) questionnaire, the participating students were asked about e.g. their learning approaches (deep, strategic, and surface approach). Their global attitude towards statistics was measured using the SATS (Survey of Attitudes Toward Statistics) questionnaire. Each student’s age and gender were included, as was their learning achievement measured by points they got in the course exam.</em></p>
 <p><em>For the current analyses, I removed the students who got 0 points in the exam. Thus, the dataset has 166 observations and the 7 variables (Age, Points, gender, attitude, deep, stra, surf) described above.</em></p>
 </div>
+<div id="task-2" class="section level2">
+<h2>TASK 2</h2>
 </div>
-<div id="task-2" class="section level1">
-<h1>TASK 2</h1>
 <div id="graphical-overview-of-the-data-and-a-summary-of-data" class="section level2">
 <h2>Graphical overview of the data and a summary of data</h2>
 <p>I installed the packages ggplot2, GGally and psych.</p>
@@ -288,9 +288,9 @@ matrix</code></pre>
 <p><em>Some of the continuous variables seem to correlate with one another: exam points correlate positively with attitude towards statistics (r=0.437) and using strategic learning (r=0.146); and negatively with using surface learning (r=-0.144). Those resorting to surface learning tended to rely less on deep learning (r=-0.324). Interestingly, this kind of relationship was only seen in males (r=-0.622 vs. females r=0.087).</em></p>
 </div>
 </div>
+<div id="tasks-3-4" class="section level2">
+<h2>TASKS 3 &amp; 4</h2>
 </div>
-<div id="tasks-3-4" class="section level1">
-<h1>TASKS 3 &amp; 4</h1>
 <div id="regression-model-summary" class="section level2">
 <h2>Regression model summary</h2>
 <p>Based on the correlations between the continuous variables, I chose attitude towards statistics, using strategic learning and surface learning as explanatory variables. Exam points was used as the dependent variable.</p>
@@ -366,9 +366,9 @@ summary(regr_model3)</code></pre>
 <p><em>In this model, +3.5 points in the attitude towards statistics corresponds to +1 points in the exam. With only one explanatory variable, we get a model covering almost 20% of the variance in the exam points. The model is statistically significant (p&lt;0.001, F=38.61, df=164).</em></p>
 <p><em>Conclusion: attitude counts!</em></p>
 </div>
+<div id="task-5" class="section level2">
+<h2>TASK 5</h2>
 </div>
-<div id="task-5" class="section level1">
-<h1>TASK 5</h1>
 <div id="diagnostic-plots" class="section level2">
 <h2>Diagnostic plots</h2>
 <pre class="r"><code>plot(regr_model3)</code></pre>

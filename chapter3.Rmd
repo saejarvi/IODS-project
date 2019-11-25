@@ -1,7 +1,7 @@
 # Exercise 3: Analysis
 
 
-# TASK 2
+## TASK 2
 ## Reading the data into R using the link provided:
 
 ```{r}
@@ -10,7 +10,7 @@ str(alc_data)
 ```
  *The dataset has been downloaded from UCI Machine Learning Depository. The data have been collected from secondary education students in two Portuguese schools by using school reports and questionnaires. The data contain 35 variables that cover the students' grades, democraphic, social and school-related measures.*
  
-# TASK 3
+## TASK 3
 
 *The aim of the current analyses is to  study the relationships between high/non-high alcohol
 consumption (high_use) and some of the other variables in the data.*
@@ -31,7 +31,7 @@ health - current health status (numeric: from 1 - very bad to 5 - very good).
 4) high alcohol consumption is more probable in cases of worse current health status
 
 
-# TASK 4
+## TASK 4
 
 First checking how many a student uses non-high vs. high amounts of alcohol:
 ```{r}
@@ -78,7 +78,7 @@ This preliminary exploration seems to support my hypotheses 1) and 3), but not 2
 
 It is worth noting that the percentages can be misleading with very small number of cases (e.g. famrel=1, n=9).
 
-#TASK 5
+##TASK 5
 
 ##Logistic regression models
 
