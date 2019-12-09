@@ -1,0 +1,146 @@
+# Exercise 6: Analysis
+
+*In this week's exercise, we explore the data using both simpler and more advanced methods (i.e. linear mixed effects models).*
+
+
+Reading the long form data sets:
+```{r}
+BPRS_l <- read.table("data/BPRS2_long", sep = " ")
+RATS_l <- read.table("data/RATS2_long", sep = " ")
+
+str(BPRS_l)
+str(RATS_l)
+```
+
+
+##TASK 1 Implementing the analyses of Chapter 8 of the text book using the RATS data
+
+## Graphical display of the longitudinal data
+
+Let's plot the weight values across time in all diet groups for each rat.
+
+```{r}
+library(ggplot2)
+library(dplyr)
+
+ggplot(RATS_l, aes(x = day, y = grams, linetype = as.factor(ID))) +   #treating the ID variable as factor
+  geom_line() +
+  scale_linetype_manual(values = rep(1:10, times=4)) +
+  facet_grid(. ~ Group, labeller = label_both)
+```
+
+As we can see, all rats in all groups gained weight over time. In the first diet group, however, the rats were smaller than in the other two groups to begin with, and in group 2, one rat was markedly heavier than others from the start. We want to take this initial variation into account when examining weight gain in these groups.
+
+This variation can be seen also by standardizing the weight observations:
+
+```{r}
+RATS_l <- RATS_l %>%
+  group_by(day) %>%
+  mutate(stdgrams = (grams - mean(grams))/sd(grams)) %>%
+  ungroup()
+
+glimpse(RATS_l)
+```
+
+Plots with the standardized data:
+
+```{r}
+ggplot(RATS_l, aes(x = day, y = stdgrams, linetype = as.factor(ID))) +   #treating the ID variable as factor
+  geom_line() +
+  scale_linetype_manual(values = rep(1:10, times=4)) +
+  facet_grid(. ~ Group, labeller = label_both) +
+  scale_y_continuous(name = "Standardized weight")
+```
+
+
+In this case, summary graphs may not help much in the interpretation of the data, for there are so few observations per group. However, here is a summary graph of the group-wise mean weight (unstandardized):
+
+```{r}
+#Creating the summary data:
+RATS_S <- RATS_l %>%
+  group_by(Group, ID) %>%
+  summarise( mean=mean(grams) ) %>%
+  ungroup()
+
+glimpse(RATS_S)
+
+#Drawing a boxplot of the mean weight versus diet group
+ggplot(RATS_S, aes(x = factor(Group), y = mean)) +
+  geom_boxplot() +
+  stat_summary(fun.y = "mean", geom = "point", shape=23, size=4, fill = "white") +
+  scale_y_continuous(name = "mean (grams), days 1-64")
+```
+
+This plot confirms that rats in group 1 were lighter than the others on average (across the whole study period). Group 3, on the contrary, seems to have most weight on average. It is noteworthy that due to a small sample size per group (n=4 to n = 8), the program easily interprets individual rats as outliers. Based on visual assessment, I would consider the outlier in group 2 a "true" outlier and remove it from the analysis.
+
+To examine the statistical difference in mean weight between groups, the ANOVA (analysis of variance) could be used.
+
+
+
+##TASK 2 Implementing the analyses of chapter 9 of the text book using the BPRS data
+
+We expect the repeated measurements in the data set to be correlated (they're taken from the same person). Therefore, we need a model that can take this into account. Here, we use a linear mixed effect model.
+
+## Graphical display of the longitudinal data
+
+Let's plot the BPRS scores across time in both intervention settings for each participant.
+
+```{r}
+#Drawing the plot of individual BPRS scores across time
+ggplot(BPRS_l, aes(x = week, y = BPRS, linetype = as.factor(subject))) +
+  geom_line() +
+  scale_linetype_manual(values = rep(1:10, times=4)) +
+  facet_grid(. ~ treatment, labeller = label_both) +
+  theme(legend.position = "none") + 
+  scale_y_continuous(limits = c(min(BPRS_l$BPRS), max(BPRS_l$BPRS)))
+```
+
+For most participants, the psychiatric symptoms - measured by BPRS score - decreased over time.
+
+There is variation between individuals that the linear mixed effects model interprets as random variation - hence the inclusion of random effects in the model. We can assume having random intercept (i.e. the starting level varies) and/or random slopes (i.e. the change across time varies) in the model, and based on the graph above, a model with random intercept and random slopes seems most appropriate.
+
+We will compare models with 1) random intercept and 2) a combination of random intercept and random slopes.
+
+```{r}
+#Fitting the random intercept model to data:
+library(lme4)
+
+BPRS_m1 <- lmer(BPRS ~ week + treatment + (1 | subject), data = BPRS_l, REML = FALSE)
+
+#summary of the model:
+summary(BPRS_m1)
+```
+
+```{r}
+#Fitting the random intercept and random slopes model to data:
+BPRS_m2 <- lmer(BPRS ~ week + treatment + (week | subject), data = BPRS_l, REML = FALSE)
+
+#summary of the model:
+summary(BPRS_m2)
+```
+
+According to the model fit indices, there is not much difference in how well these models fit the data. The residuals seem rather normally distributed in both models. Based on variance explained by intercept vs. week, the initial score on the BPRS scale seems to explain a great portion of the variance (compared with time). Still, the majority of the variance is left unexplained (residual).
+
+Let's test a third model with random intercept and slopes and a group x time interaction:
+
+```{r}
+#Fitting the random intercept and random slopes + interaction model to data:
+BPRS_m3 <- lmer(BPRS ~ week * treatment + (week | subject), data = BPRS_l, REML = FALSE)
+
+#summary of the model:
+summary(BPRS_m3)
+```
+
+This model doesn't show much difference to the former models in terms of fit or the effect it explains. The interaction between time point and treatment doesn't seem to bring additional value to the model.
+
+Here - once more - is a plot from the data:
+```{r}
+ggplot(BPRS_l, aes(x = week, y = BPRS, group = subject)) +
+  geom_line(aes(linetype = as.factor(subject))) +
+  facet_grid(. ~ treatment, labeller = label_both) +
+  scale_x_continuous(name = "Time (weeks)", breaks = seq(0, 10, 1)) +
+  scale_y_continuous(name = "BPRS score") +
+  theme(legend.position = "top")
+```
+
+In summary, according to these analyses, the initial score on the BPRS scale measuring psychiatric behavior disorders is the strongest determinant of the psychiatric behavior development over time. Most of the variance, however, is left unexplained by these models - we would have to include more variables to the model to test whether e.g. age shares part of this "unexplained" variance.
